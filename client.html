@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>스무고개 게임</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <link rel="stylesheet" href="./static/style.css" />
+</head>
+<body>
+    <h1>스무고개 게임</h1>
+
+    <div id="join-container">
+        <label>닉네임: <input type="text" id="username" /></label>
+        <label>방 코드: <input type="text" id="room" /></label>
+        <button id="joinBtn">방 참가</button>
+    </div>
+
+    <div id="game" style="display:none;">
+        <div id="messages"></div>
+
+        <div class="input-row">
+            <input type="text" id="categorie" placeholder="카테고리 선택" />
+            <button id="categorieBtn">카테고리 선택</button>
+            <select id="difficulty" name="difficulty">
+                <option value="easy" selected>쉬움</option>
+                <option value="medium">보통</option>
+                <option value="hard">어려움</option>
+            </select>
+        </div>
+
+        <div class="input-row">
+            <input type="text" id="question" placeholder="질문 입력" />
+            <button id="askBtn">질문하기</button>
+            <input type="text" id="guess" placeholder="정답 시도" />
+            <button id="guessBtn">정답 맞추기</button>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+
+        const usernameInput = document.getElementById('username');
+        const roomInput = document.getElementById('room');
+        const joinBtn = document.getElementById('joinBtn');
+
+        const gameDiv = document.getElementById('game');
+        const messagesDiv = document.getElementById('messages');
+
+        const questionInput = document.getElementById('question');
+        const askBtn = document.getElementById('askBtn');
+
+        const guessInput = document.getElementById('guess');
+        const guessBtn = document.getElementById('guessBtn');
+
+        const categorieInput = document.getElementById('categorie');
+        const categorieBtn = document.getElementById('categorieBtn');
+
+        const difficultySelect = document.getElementById('difficulty');
+
+        joinBtn.addEventListener('click', () => {
+            const username = usernameInput.value.trim();
+            const room = roomInput.value.trim();
+            if (username && room) {
+                socket.emit('join', { username, room });
+                gameDiv.style.display = 'block';
+                appendMessage(`방 "${room}"에 입장했습니다.`);
+            }
+        });
+
+        askBtn.addEventListener('click', () => {
+            const question = questionInput.value.trim();
+            const room = roomInput.value.trim();
+            if (question) {
+                socket.emit('ask', { room, question });
+                appendMessage(`질문: ${question}`);
+                questionInput.value = '';
+            }
+        });
+
+        guessBtn.addEventListener('click', () => {
+            const guess = guessInput.value.trim();
+            const username = usernameInput.value.trim();
+            const room = roomInput.value.trim();
+            if (guess) {
+                socket.emit('guess', { room, username, guess });
+                appendMessage(`정답 시도: ${guess}`);
+                guessInput.value = '';
+            }
+        });
+
+        categorieBtn.addEventListener('click', () => {
+            const categorie = categorieInput.value.trim();
+            const username = usernameInput.value.trim();
+            const room = roomInput.value.trim();
+            if (categorie) {
+                socket.emit('categorie', { room, username, categorie });
+                appendMessage(`카테고리 변경: ${categorie}`);
+                categorieInput.value = '';
+            }
+        });
+
+        difficultySelect.addEventListener('change', () => {
+            const difficulty = difficultySelect.value;
+            const username = usernameInput.value.trim();
+            const room = roomInput.value.trim();
+            if (difficulty) {
+                socket.emit('difficulty', { room, username, difficulty });
+                appendMessage(`난이도 변경: ${difficulty === 'easy' ? '쉬움' : difficulty === 'medium' ? '보통' : '어려움'}`);
+            }
+        });
+
+        socket.on('message', data => {
+            appendMessage(data.msg);
+        });
+
+        socket.on('answer', data => {
+            appendMessage(`답변: ${data.question} → ${data.answer}`);
+        });
+
+        socket.on('result', data => {
+            appendMessage(data.msg);
+        });
+
+        function appendMessage(msg) {
+            const p = document.createElement('p');
+            p.textContent = msg;
+            messagesDiv.appendChild(p);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+    </script>
+</body>
+</html>
