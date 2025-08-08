@@ -4,7 +4,7 @@ import random
 import os
 import google.generativeai as genai
 
-GOOGLE_API_KEY = "AIzaSyD8DpGZteOzYzhVf4IVVTbyuL5NddS3obI"
+GOOGLE_API_KEY = your_api_key
 
 model = genai.GenerativeModel('gemini-1.5-flash')
 
